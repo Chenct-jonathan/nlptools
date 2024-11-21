@@ -37,10 +37,10 @@ class HeadPatterns(Static):
     C_pat: re.Pattern = re.compile("((?<!</ACTION_verb>)(?<!</FUNC_inner>)<ASPECT>了</ASPECT>$|<CLAUSE_(particle|YesNoQ)>[^<]+</CLAUSE_(particle|YesNoQ)>)")
     "\</ACTION_verb>(\<ACTION_verb>說\</ACTION_verb>)"
 
-    Mod_pat: re.Pattern =  re.compile("((<MODAL>[^<]+</MODAL>|<MODIFIER>可能</MODIFIER>|<ACTION_verb>要</ACTION_verb>)+)")
+    Mod_pat: re.Pattern =  re.compile("((<MODAL>[^<]+</MODAL>|<MODIFIER>可能</MODIFIER>|<ACTION_verb>要</ACTION_verb>|<CLAUSE_AnotAQ>[^<]+會</CLAUSE_AnotAQ>)+)")
     "(\<MODAL>[^<]+\</MODAL>)"
 
-    Aux_pat: re.Pattern = re.compile("(((?:<FUNC_inner>就</FUNC_inner>)?<AUX>[就卻是]+</AUX>|<CLAUSE_AnotAQ>[^<]+</CLAUSE_AnotAQ>))")
+    Aux_pat: re.Pattern = re.compile("(((?:<FUNC_inner>就</FUNC_inner>)?(?<!<FUNC_inner>還</FUNC_inner>)<AUX>[就卻是]+</AUX>|<CLAUSE_AnotAQ>[^<]+[^會]</CLAUSE_AnotAQ>))")
     
     Neg_pat: re.Pattern = re.compile("(<FUNC_negation>[^<]+</FUNC_negation>(<ACTION_verb>要</ACTION_verb>)?)")
     "(\<FUNC_negation>[^\<]+\</FUNC_negation>)"
@@ -54,27 +54,29 @@ class HeadPatterns(Static):
     Deg_pat: re.Pattern = re.compile("(<FUNC_degreeHead>[太很]</FUNC_degreeHead>)") #I leave possibility for adj. predicates. e.g., 我很高。
     "(\<FUNC_degreeHead>很\</FUNC_degreeHead>)"
 
-    Adv_pat = re.compile("((?:<FUNC_inner>所</FUNC_inner>)?<ModifierP>[^<]+地</ModifierP>|(?:<FUNC_inner>所</FUNC_inner>)?<[^>]+>[^<]+</[^>]+><FUNC_modifierHead>地</FUNC_modifierHead>|(?:<TIME_[a-z]+>[^<]+</TIME_[a-z]+>){1,10}(?:<RANGE_period>[^<]+</RANGE_period>)?|<FUNC_inter>[^<]+</FUNC_inter>|<QUANTIFIER>[^<]+</QUANTIFIER>)")
+    Adv_pat = re.compile("((?:<FUNC_inner>所</FUNC_inner>)?<ModifierP>[^<]+地</ModifierP>|(?:<FUNC_inner>所</FUNC_inner>)?<[^>]+>[^<]+</[^>]+><FUNC_modifierHead>地</FUNC_modifierHead>|(?:<TIME_[a-z]+>[^<]+</TIME_[a-z]+>){1,10}(?:<RANGE_period>[^<]+</RANGE_period>)?|<QUANTIFIER>[^<]+</QUANTIFIER>)")
 
     #Adj_pat = re.compile("(<MODIFIER>[^<]+</MODIFIER>(?:<FUNC_inner>的</FUNC_inner>)?)")
     
-    P_pat: re.Pattern = re.compile("(<FUNC_inner>[從在]</FUNC_inner>)") #I did not know how to parse 在...裡面 yet.
+    P_pat: re.Pattern = re.compile("(<FUNC_inner>[從在]</FUNC_inner>|<ACTION_verb>到</ACTION_verb>)") #I did not know how to parse 在...裡面 yet.
     "(<FUNC_inner>[從在]</FUNC_inner>)"
     
-    V_pat: re.Pattern = re.compile("(?<!<FUNC_inner>的</FUNC_inner>)((<(ACTION_verb|VerbP)>[^<用]+</(ACTION_verb|VerbP)>)+(?:<FUNC_inner>[成向]</FUNC_inner>)?)(?!<FUNC_inner>的</FUNC_inner>)")
+    V_pat: re.Pattern = re.compile("(?<!<FUNC_inner>的</FUNC_inner>)((<(ACTION_verb|VerbP)>[^<用到]+</(ACTION_verb|VerbP)>|<FUNC_negation>沒有</FUNC_negation>)+(?:<FUNC_inner>[成向]</FUNC_inner>)?)(?!<FUNC_inner>的</FUNC_inner>)")
     "(\<(ACTION_verb|VerbP)>[^\<]+\</(ACTION_verb|VerbP)>)"
 
     Cls_pat: re.Pattern =  re.compile("(<ENTITY_classifier>[^<]+</ENTITY_classifier>)")
     "(\<ENTITY_classifier>[^\<]+\</ENTITY_classifier>)"
 
-    RC_pat: re.Pattern = re.compile("(<FUNC_inner>的</FUNC_inner>)")
+    RC_pat: re.Pattern = re.compile("(<FUNC_inner>的</FUNC_inner>|<MODIFIER_color>[^<]+</MODIFIER_color>)")
     "(\<FUNC_inner>的\</FUNC_inner>)"
 
     De_Comp_pat: re.Pattern = re.compile("(<FUNC_inner>得</FUNC_inner>)")
     "(\<FUNC_inner>得\</FUNC_inner>)"
 
-    N_pat: re.Pattern = re.compile("((<ENTITY_(nounHead|nouny|noun|oov|pronoun)>[^<]+</ENTITY_(nounHead|nouny|noun|oov|pronoun)>|<LOCATION>[^<]+</LOCATION>|<RANGE_locality>[^<]+</RANGE_locality>|<FUNC_determiner>[^<]+</FUNC_determiner>|<CLAUSE_(What|Where|Who)Q>[^<]+</CLAUSE_(What|Where|Who)Q>)+)")
+    N_pat: re.Pattern = re.compile("((<ENTITY_(nounHead|nouny|noun|oov|pronoun)>[^<]+</ENTITY_(nounHead|nouny|noun|oov|pronoun)>|<TIME_[a-z]+>[^<]+</TIME_[a-z]+>|<LOCATION>[^<]+</LOCATION>|<RANGE_locality>[^<]+</RANGE_locality>|<FUNC_determiner>[^<]+</FUNC_determiner>|<CLAUSE_(What|Where|Who)Q>[^<]+</CLAUSE_(What|Where|Who)Q>)+)")
     "(\<ENTITY_(nounHead|nouny|noun|oov|pronoun)>[^\<]+\</ENTITY_(nounHead|nouny|noun|oov|pronoun)>)"
+    
+    Conj_pat: re.Pattern = re.compile("(<FUNC_conjunction>[^<]+</FUNC_conjunction>|<FUNC_inner>還</FUNC_inner><AUX>是</AUX>)")
 
 @dataclass
 class Tree:
@@ -305,11 +307,11 @@ class NP(Tree):
 def parse_NP(ClsP: Tree, checkCLS: bool) -> NP:
     rc = parse_RC(ClsP.comp)
     if rc is None:
-        if "ACTION" in parse_VP(ClsP.comp).head:
-            return NP(left = "",
-                    head = "",
-                    comp = ClsP.comp
-                    )
+        #if "ACTION" in parse_VP(ClsP.comp).head:
+            #return NP(left = "",
+                    #head = "",
+                    #comp = ClsP.comp
+                    #)
         '''
         here's a new sample for the n_head
         suppose N_COMP will always be ""
@@ -422,7 +424,8 @@ def gen_realTree(treeDICT: dict) -> Tree:
         return None    
     projLIST = ['CP', 'TP', 'ModP', 'AspP', 'LightVP', 'VP', 'ClsP', 'NP', 'De_CompP']
     realDICT = copy.deepcopy(treeDICT)
-
+    projLIST = [proj for proj in projLIST if proj in realDICT]
+    
     for max_proj in range(len(projLIST) - 1, -1, -1):
         if realDICT[projLIST[max_proj]].head != "":
             for higher_proj in range(projLIST.index(projLIST[max_proj]) - 1, -1, -1):
@@ -438,40 +441,68 @@ def gen_realTree(treeDICT: dict) -> Tree:
     return realDICT["CP"]
 
 def parse_S(parseSTR: str, genTree: bool, showTree: bool) -> dict:
+    treeDICT = {}
+    
     tCP = parse_CP(parseSTR)
+    if tCP.head != "":
+        treeDICT["CP"] = tCP
+    
     tTP = parse_TP(tCP.comp)
+    if tTP.head != "":
+        treeDICT["TP"] = tTP    
+    
     tModP = parse_ModP(tTP.comp)
+    if tModP.head != "":
+        treeDICT["ModP"] = tModP    
+    
     tAspP = parse_AspP(tModP.comp)
+    if tAspP.head != "":
+        treeDICT["AspP"] = tAspP     
+    
     tLightVP = parse_LightVP(tAspP.comp)
+    if tLightVP.head != "":
+        treeDICT["LightVP"] = tLightVP    
+    
     tVP = parse_VP(tLightVP.comp)
-    tClsP = parse_ClsP(tVP.comp)
-    tNP = parse_NP(tClsP, True)
-    tDe_CompP = parse_De_CompP(tVP.comp)
-
-    treeDICT = {
-        "CP": tCP,
-        "TP": tTP,
-        "ModP": tModP,
-        "AspP": tAspP,
-        "LightVP": tLightVP,
-        "VP": tVP,
-        "ClsP": tClsP,
-        "NP": tNP,
-        "De_CompP": tDe_CompP
-    }
+    treeDICT["VP"] = tVP
     
-    ## SFP 了 should be at CP.Right. I will place it in CP.left for now.
-    #for max_proj in ['De_CompP', 'NP', 'ClsP', 'VP', 'LightVP', 'AspP', 'ModP', 'TP', 'CP']:
-        #if treeDICT[max_proj].head != "" and treeDICT[max_proj].comp.endswith("<ASPECT>了</ASPECT>") == True:
-            #treeDICT["CP"].head = "<ASPECT>了</ASPECT>"
-            #treeDICT[max_proj].comp = treeDICT[max_proj].comp[:len(treeDICT[max_proj].comp)-len("<ASPECT>了</ASPECT>")]
-            #break
-        #else:
-            #continue
-    
-    if treeDICT["NP"].head == "" and treeDICT["NP"].comp != "":
-        treeDICT["NP"] = parse_S(treeDICT["NP"].comp, genTree=True, showTree=False)    
-    
+    #pprint(treeDICT)    
+    if tVP.head != "":
+        check_embed_v = split_pos(HeadPatterns.RC_pat, tVP.comp)
+        check_embed_n = split_pos(HeadPatterns.N_pat, tVP.comp)
+        if (
+            (check_embed_v is not None and "<ACTION_verb>" in check_embed_v[2]) or  
+            (check_embed_n is not None and "<ACTION_verb>" in check_embed_n[2])
+            ):
+            treeDICT["VP"].comp = parse_S(treeDICT["VP"].comp, genTree=True, showTree=False)        
+            
+        else:
+            treeDICT["VP"] = tVP
+            
+            tClsP = parse_ClsP(tVP.comp)
+            if tClsP.head != "":
+                treeDICT["ClsP"] = tClsP
+                
+            tNP = parse_NP(tClsP, True)
+            if tNP.head != "":
+                treeDICT["NP"] = tNP
+                
+            tDe_CompP = parse_De_CompP(tVP.comp)
+            if tDe_CompP.head != "":
+                treeDICT["De_CompP"] = tDe_CompP
+            
+        #treeDICT = {
+            #"CP": tCP,
+            #"TP": tTP,
+            #"ModP": tModP,
+            #"AspP": tAspP,
+            #"LightVP": tLightVP,
+            #"VP": tVP,
+            #"ClsP": tClsP,
+            #"NP": tNP,
+            #"De_CompP": tDe_CompP
+        #}
+         
     if genTree == True:
         realTree = gen_realTree(treeDICT)
         
@@ -681,13 +712,13 @@ def output_tree(treeDICT: dict):
                 print("\n [VP/PredicateP]:")
                 pprint(treeDICT["VP"])
             
-            if treeDICT["ClsP"].head != "":        
-                print("\n [ClsP]:")
-                pprint(treeDICT["ClsP"])
-            else:
+            if "ClsP" not in treeDICT or (hasattr(treeDICT["ClsP"], "head") ==True and treeDICT["ClsP"].head == ""):
                 pass
+            else:
+                print("\n [ClsP]:")
+                pprint(treeDICT["ClsP"])                
             
-            if treeDICT["NP"].head == "":
+            if "NP" not in treeDICT or (hasattr(treeDICT["NP"], "head") ==True and treeDICT["NP"].head == ""):
                 pass
             elif treeDICT["NP"].head == "∅":
                 print("\n [NP: Is There An Elided NP?]")
@@ -696,11 +727,11 @@ def output_tree(treeDICT: dict):
                 print("\n [NP]:")
                 pprint(treeDICT["NP"])                    
             
-            if treeDICT["De_CompP"].head != "":
-                print("\n [De_CompP]:")
-                pprint(treeDICT["De_CompP"])
-            else:
+            if "De_CompP" not in treeDICT or (hasattr(treeDICT["De_CompP"], "head") ==True and treeDICT["De_CompP"].head == ""):
                 pass
+            else:
+                print("\n [De_CompP]:")
+                pprint(treeDICT["De_CompP"])                
             
             return "Successfully"
     
@@ -711,25 +742,26 @@ def output_tree(treeDICT: dict):
 
 
 if __name__ == '__main__':
-    #inputSTR = "你今天要一起吃飯嗎？"
+    #inputSTR = "這是一部很好看的電影。"
     #parseLIST = [i for i in articut.parse(inputSTR, level="lv1")["result_pos"] if len(i) > 1]
     #for parseSTR in parseLIST:
         #if len(re.findall("<[^>]+>[^<]+</[^>]+>", parseSTR)) > 1:
             #print("*InputSTR:{}".format(inputSTR))
             #treeDICT = parse_S(parseSTR, genTree=False, showTree=False)
+            ##pprint(treeDICT)
             #realTree = parse_S(parseSTR, genTree=True, showTree=True)
             #print("\n")
             
-            #print("*Narrow Syntax Operations:")
-            #EPP_tree = ex_EPP_movement(treeDICT, genTree=True, showTree=True)
-            #vraise_tree = ex_verb_raising(treeDICT, genTree=True, showTree=True)
+            ##print("*Narrow Syntax Operations:")
+            ##EPP_tree = ex_EPP_movement(treeDICT, genTree=True, showTree=True)
+            ##vraise_tree = ex_verb_raising(treeDICT, genTree=True, showTree=True)
             #print("--------------------------------------------------------------------------------------------------------------------------------")    
     
     
     with open("./data/test_data.json", "r", encoding="utf-8") as jsonFILE:
         testLIST = json.load(jsonFILE)
      
-    for inputSTR in testLIST[30:50]:
+    for inputSTR in testLIST[50:100]:
         parseLIST = [i for i in articut.parse(inputSTR, level="lv1")["result_pos"] if len(i) > 1]
         #pprint(parseLIST)
         for parseSTR in parseLIST:
