@@ -688,53 +688,9 @@ def output_tree(treeDICT: dict):
             projLIST = [proj for proj in projLIST if proj in treeDICT]
             
             for max_proj in projLIST:
-                print(f"\n [{max_proj}]:")
-                pprint(treeDICT[max_proj])
-            
-            #print("\n [TP]:")
-            #pprint(treeDICT["TP"])
-            
-            #if treeDICT["ModP"].head == "":
-                #pass
-            #else:    
-                #print("\n [ModP]:")
-                #pprint(treeDICT["ModP"])
-                           
-            #if treeDICT["AspP"].head == "":
-                #pass
-            #else:    
-                #print("\n [AspP]:")
-                #pprint(treeDICT["AspP"])            
-            
-            #print("\n [LightVP]:")
-            #pprint(treeDICT["LightVP"])
-                
-            #if treeDICT["VP"].head == "":
-                #pass
-            #else:
-                #print("\n [VP/PredicateP]:")
-                #pprint(treeDICT["VP"])
-            
-            #if "ClsP" not in treeDICT or (hasattr(treeDICT["ClsP"], "head") ==True and treeDICT["ClsP"].head == ""):
-                #pass
-            #else:
-                #print("\n [ClsP]:")
-                #pprint(treeDICT["ClsP"])                
-            
-            #if "NP" not in treeDICT or (hasattr(treeDICT["NP"], "head") ==True and treeDICT["NP"].head == ""):
-                #pass
-            #elif treeDICT["NP"].head == "∅":
-                #print("\n [NP: Is There An Elided NP?]")
-                #pprint(treeDICT["NP"])
-            #else:
-                #print("\n [NP]:")
-                #pprint(treeDICT["NP"])                    
-            
-            #if "De_CompP" not in treeDICT or (hasattr(treeDICT["De_CompP"], "head") ==True and treeDICT["De_CompP"].head == ""):
-                #pass
-            #else:
-                #print("\n [De_CompP]:")
-                #pprint(treeDICT["De_CompP"])                
+                if treeDICT[max_proj].head != "":
+                    print(f"\n [{max_proj}]:")
+                    pprint(treeDICT[max_proj])       
             
             return "Successfully"
     
@@ -764,7 +720,7 @@ if __name__ == '__main__':
     with open("./data/test_data.json", "r", encoding="utf-8") as jsonFILE:
         testLIST = json.load(jsonFILE)
      
-    for inputSTR in testLIST[:10]:
+    for inputSTR in testLIST[200:250]:
         parseLIST = [i for i in articut.parse(inputSTR, level="lv1")["result_pos"] if len(i) > 1]
         #pprint(parseLIST)
         for parseSTR in parseLIST:
@@ -774,8 +730,8 @@ if __name__ == '__main__':
                 realTree = parse_S(parseSTR, genTree=True, showTree=True)
                 print("\n")
                 
-                print("*Narrow Syntax Operations:")
-                EPP_tree = ex_EPP_movement(treeDICT, genTree=True, showTree=True)
+                #print("*Narrow Syntax Operations:")
+                #EPP_tree = ex_EPP_movement(treeDICT, genTree=True, showTree=True)
                 #vraise_tree = ex_verb_raising(treeDICT, genTree=True, showTree=True)
                 print("--------------------------------------------------------------------------------------------------------------------------------")
             
